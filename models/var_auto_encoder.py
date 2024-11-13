@@ -1,19 +1,23 @@
 """Variational AutoEncoder class."""
 
 import torch
-from torch import nn, Tensor, flatten, reshape
+from torch import nn, Tensor
 from models.auto_encoder import AutoEncoder
 
 
 class VarAutoEncoder(AutoEncoder):
     """Autoencoder class that inherits from PyTorch's nn.Module class."""
 
-    def __init__(self, kernels: list[list[int]],
-                 batch_norm: bool = True,
-                 activation: str = 'Relu',
-                 latent_dim: int = 12):
+    def __init__(
+        self,
+        kernels: list[list[int]],
+        batch_norm: bool = True,
+        activation: str = "Relu",
+        latent_dim: int = 96,
+    ):
         super(VarAutoEncoder, self).__init__(
-            kernels, batch_norm, activation, latent_dim)
+            kernels, batch_norm, activation, latent_dim
+        )
         self.fc_mean = nn.Linear(self.latent_dim, self.latent_dim)
         self.fc_log_var = nn.Linear(self.latent_dim, self.latent_dim)
 
@@ -44,14 +48,14 @@ class VarAutoEncoder(AutoEncoder):
 
     def get_kl_divergence(self, mu: Tensor, log_var: Tensor) -> Tensor:
         """Calculate the KL divergence."""
-        kl_divergence = -0.5 * \
-            torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+        kl_divergence = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
         return kl_divergence
 
     def latent_space(self, x: Tensor) -> Tensor:
         """Get the latent space representation."""
         mean, _ = self.encode(x)
         latent_space = mean.detach().cpu().numpy()
-        latent_space = (latent_space - latent_space.mean(axis=0)
-                        ) / latent_space.std(axis=0)
+        latent_space = (latent_space - latent_space.mean(axis=0)) / latent_space.std(
+            axis=0
+        )
         return latent_space

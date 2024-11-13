@@ -17,8 +17,8 @@ dataloader = DataLoader(dataset, batch_size=64,
                         shuffle=False)  # Reduced batch size
 
 # Load model
-autoencoder = AutoEncoder([[7], [7], [5], [3], [3]]).to(device)
-autoencoder.load_state_dict(torch.load('model.pth'))
+autoencoder = AutoEncoder([[3, 3, 3], [3, 3, 3], [3, 3], [3], [3]]).to(device)
+autoencoder.load_state_dict(torch.load('model_3.pth'))
 autoencoder.eval()
 
 # Initialize lists for storing encoded and decoded data
