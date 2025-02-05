@@ -1,27 +1,29 @@
-""" helper functions for the Monte Carlo simulation dataset """
+"""helper functions for the Monte Carlo simulation dataset"""
+
 import pathlib as pl
 from functools import cached_property
-from torch.utils.data import Dataset, Subset
+
+import discretisedfield as df
+import holoviews as hv
 import numpy as np
 import pandas as pd
 import pyvista as pv
-import discretisedfield as df
 import torch
 from sklearn.model_selection import train_test_split
-import holoviews as hv
+from torch.utils.data import Dataset, Subset
 
 
 class MCSims(Dataset):
     """
-        This is a ``torch`` DataSet class to read Sam's Monte Carlo simulation files and
-        lazy load them as torch tensors for the ML task. The main methods that need to be
-        implemented are the ``__getitem__`` and ``__len__`` for the dataset class to work
-        with the ``DataLoader`` class.
+    This is a ``torch`` DataSet class to read Sam's Monte Carlo simulation files and
+    lazy load them as torch tensors for the ML task. The main methods that need to be
+    implemented are the ``__getitem__`` and ``__len__`` for the dataset class to work
+    with the ``DataLoader`` class.
 
-        Example
-        -------
-        >>> dataset = MCSims()
-        """
+    Example
+    -------
+    >>> dataset = MCSims()
+    """
 
     def __init__(self):
         self.base_path = pl.Path(
@@ -194,10 +196,10 @@ def plot_field_xy_from_tensor(tensor, save_path=None):
     >>> plot_field_xy_from_tensor(tensor)
     :DynamicMap   [z]
     """
-    x_dim = 97
-    y_dim = 97
-    z_dim = 97
-    v_dim = 3
+    x_dim = tensor.shape[1]
+    y_dim = tensor.shape[2]
+    z_dim = tensor.shape[3]
+    v_dim = tensor.shape[0]
     value = tensor.to("cpu").numpy().transpose((1, 2, 3, 0))
     p1 = (0, 0, 0)
     p2 = (x_dim - 1, y_dim - 1, z_dim - 1)
@@ -208,33 +210,3 @@ def plot_field_xy_from_tensor(tensor, save_path=None):
     if save_path:
         hv.save(plot, save_path)
     return plot
-
-
-def plot_field_xy_compare(original_tensor, reconstructed_tensor):
-    """
-    Helper function to compare the original and reconstructed 3D magnetisation
-    configuration as a holoviews plot. The plot shows a xy-plane cut of the 3D vector
-    field with a slider to move along z-direction.
-
-    Example
-    -------
-
-    >>> plot_field_xy_compare(original_tensor, reconstructed_tensor)
-    :DynamicMap   [z]
-    """
-    x_dim = 97
-    y_dim = 97
-    z_dim = 97
-    v_dim = 3
-    original_value = original_tensor.to("cpu").numpy().transpose((1, 2, 3, 0))
-    reconstructed_value = reconstructed_tensor.to("cpu").numpy().transpose((1, 2, 3, 0))
-    p1 = (0, 0, 0)
-    p2 = (x_dim - 1, y_dim - 1, z_dim - 1)
-    mesh = df.Mesh(p1=p1, p2=p2, n=(x_dim, y_dim, z_dim))
-    original_field = df.Field(mesh=mesh, value=original_value, nvdim=v_dim)
-    reconstructed_field = df.Field(mesh=mesh, value=reconstructed_value, nvdim=v_dim)
-    return original_field.hv(
-        kdims=["x", "y"], scalar_kw={"clim": (-1, 1)}
-    ) + reconstructed_field.hv(
-        kdims=["x", "y"], scalar_kw={"clim": (-1, 1)}
-    )

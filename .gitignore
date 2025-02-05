@@ -1,5 +1,8 @@
-.venv/
-lightning_logs/
 __pycache__/
-saved_models/
+.venv/
+checkpoints/
+logs/
 run.sh
+job_output.txt
+cache.pt
+tensor_cache.pt

@@ -1,4 +1,7 @@
 """models/__init__.py"""
-from .lit_model import LitAE
-from .auto_encoder import AutoEncoder
-from .var_auto_encoder import VarAutoEncoder
+
+from .conv_block import ConvBlock
+from .lit_model import LitAE, LitVAE
+from .auto_encoder import AutoEncoder, VarAutoEncoder
+from .loss import CustomLoss
+from .smoothen import TransformedDataset
