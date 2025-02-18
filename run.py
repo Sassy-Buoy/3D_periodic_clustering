@@ -15,33 +15,36 @@ from models.lit_model import LitAE, MCSimsDataModule
 with open("config.json", "r") as f:
     config = json.load(f)
 
-batch_size = config["hyper_params"]["batch_size"]
-# lr = config["hyper_params"]["lr"]
+lit_model = LitAE(AutoEncoder(config))
 
-autoencoder = AutoEncoder(config["model_params"])
+# Define the logger
+logger = CSVLogger("")
 
-lit_model = LitAE(autoencoder)
 # Define the checkpoint callback
 checkpoint_callback = ModelCheckpoint(
-    monitor="val_loss",  # Metric to monitor
-    dirpath="checkpoints/",  # Directory to save the model
-    filename="best-checkpoint",  # Filename for the best model
-    save_top_k=1,  # Save only the best model
-    mode="min",  # Minimize the monitored metric (val_loss)
+    monitor="train_loss",  # Metric to monitor
+    dirpath=logger.log_dir,  # Directory to save the checkpoints
+    filename="model-{epoch:02d}-{val_loss:.2f}",  # Checkpoint filename
+    save_top_k=3,  # Save only the best model
+    mode="min",  # Minimize the monitored metric
     auto_insert_metric_name=False,  # Avoid automatic metric name insertion in filename
 )
 
 trainer = L.Trainer(
-    precision=64,
-    callbacks=[EarlyStopping(monitor="val_loss", patience=5), checkpoint_callback],
+    precision="16-mixed",
+    callbacks=[checkpoint_callback],
+    max_epochs=400,
     accumulate_grad_batches=2,
-    num_sanity_val_steps=0,
-    logger=CSVLogger("logs"),
+    logger=logger,
     log_every_n_steps=1,
 )
 
 trainer.fit(
     lit_model,
-    # ckpt_path="checkpoints/best-checkpoint-vn.ckpt",
-    datamodule=MCSimsDataModule(batch_size=batch_size, num_workers=3),
+    # ckpt_path="lightning_logs/version_3/autoencoder-99-0.52.ckpt",
+    datamodule=MCSimsDataModule(batch_size=64, num_workers=3),
 )
+
+# Save the model configuration to the logger directory.
+with open(f"{logger.log_dir}/AE_config.json", "w") as f:
+    json.dump(config, f)

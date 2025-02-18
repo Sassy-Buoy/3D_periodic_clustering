@@ -45,6 +45,8 @@ class MCSims(Dataset):
 
         if preload:
             self.preloaded_data = self._load_tensor_cache()
+        else:
+            self.preloaded_data = None
 
     def _load_tensor_cache(self):
         """Load the entire dataset into memory if a cached tensor file exists."""
@@ -102,7 +104,7 @@ class MCSims(Dataset):
         """
         return torch.nn.AdaptiveAvgPool3d((48, 48, 48))(tensor)
 
-    def __getitem__(self, index: [int, slice]) -> torch.Tensor:
+    def __getitem__(self, index: int | slice) -> torch.Tensor:
         """
         Fetch simulation data as tensors.
         If preload=True, load from memory instead of reading files.
@@ -157,7 +159,7 @@ class MCSims(Dataset):
         )
 
 
-def plot_field_xy_from_tensor(tensor, save_path=None):
+def plot_field_xy_from_tensor(tensor, save_path: str | None = None):
     """
     Convert a ``torch.Tensor`` to ``discretisedfield.Field`` and plot the xy-plane cut.
     """
@@ -181,4 +183,5 @@ def plot_field_xy_from_tensor(tensor, save_path=None):
 if __name__ == "__main__":
     # dataset = MCSims(preload=False)
     # dataset.save_tensor_cache()
-    print("Tensor cache saved")
+    # print("Tensor cache saved")
+    pass

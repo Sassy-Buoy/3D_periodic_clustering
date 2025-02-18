@@ -19,14 +19,16 @@ class ConvBlock(nn.Module):
         for kernel_size in kernels:
             self.layers.append(
                 nn.Conv3d(
-                    in_channels=(in_channels if len(self.layers) == 0 else out_channels),
+                    in_channels=(
+                        in_channels if len(self.layers) == 0 else out_channels
+                    ),
                     out_channels=out_channels,
                     kernel_size=kernel_size,
                     padding=kernel_size // 2,
                 )
             )
             self.layers.append(nn.BatchNorm3d(out_channels))
-            self.layers.append(nn.LeakyReLU() if out_channels != 3 else nn.Identity())
+            self.layers.append(nn.GELU() if out_channels != 3 else nn.Identity())
 
         if in_size > out_size:
             self.downsample = nn.AdaptiveMaxPool3d(output_size=out_size)
@@ -72,7 +74,7 @@ class ResBlock(ConvBlock):
         identity = self.skip(x)
         out = self.layers(x)
         out += identity  # Residual connection
-        out = nn.LeakyReLU()(out)
+        out = nn.GELU()(out)
         if hasattr(self, "downsample"):
             out = self.downsample(out)
         return out
@@ -128,6 +130,7 @@ class SpatialAttentionBlock(nn.Module):
         # Apply attention map to input
         return x * attention_map
 
+
 class CBAM(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(CBAM, self).__init__()
@@ -148,7 +151,7 @@ class CBAM(nn.Module):
         self.channel_attention = nn.Sequential(
             nn.AdaptiveAvgPool3d((1, 1, 1)),
             nn.Conv3d(out_channels, out_channels // 2, kernel_size=1),
-            nn.LeakyReLU(),
+            nn.GELU(),
             nn.Conv3d(out_channels // 2, out_channels, kernel_size=1),
             nn.Sigmoid(),
         )

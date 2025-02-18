@@ -11,15 +11,20 @@ class AutoEncoder(nn.Module):
 
     def __init__(
         self,
-        config: list[dict],
+        config: dict,
     ):
         super(AutoEncoder, self).__init__()
-        self.config = config
+        self.latent_dim = config["latent_dim"]
+        self.layers = config["layers"]
+
+        self.prelatent_dim = (
+            self.layers[-1]["out_channels"] * self.layers[-1]["out_size"] ** 3
+        )
 
         self.encoder = nn.Sequential()
         self.decoder = nn.Sequential()
 
-        for i, layer in enumerate(self.config):
+        for i, layer in enumerate(self.layers):
             # Insert the encoder layers
             if layer["type"] == "Conv":
                 self.encoder.append(
@@ -62,11 +67,25 @@ class AutoEncoder(nn.Module):
                         out_size=layer["in_size"],
                     ),
                 )
-        # Flatten and unflatten the tensors
+        # Flatten and linear layers for the latent space
         self.encoder.append(nn.Flatten())
+
+        if self.prelatent_dim != self.latent_dim:
+            self.encoder.append(nn.Linear(self.prelatent_dim, self.latent_dim))
         self.decoder.insert(
-            0, nn.Unflatten(1, (self.config[-1]["out_channels"], 1, 1, 1))
+            0,
+            nn.Unflatten(
+                1,
+                (
+                    self.layers[-1]["out_channels"],
+                    self.layers[-1]["out_size"],
+                    self.layers[-1]["out_size"],
+                    self.layers[-1]["out_size"],
+                ),
+            ),
         )
+        if self.prelatent_dim != self.latent_dim:
+            self.decoder.insert(0, nn.Linear(self.latent_dim, self.prelatent_dim))
 
     def forward(self, x: Tensor):
         """Forward pass through the autoencoder."""
@@ -84,14 +103,10 @@ class AutoEncoder(nn.Module):
 class VarAutoEncoder(AutoEncoder):
     """Autoencoder class that inherits from PyTorch's nn.Module class."""
 
-    def __init__(self, config: list[dict]):
+    def __init__(self, config: dict):
         super(VarAutoEncoder, self).__init__(config)
-        self.fc_mean = nn.Linear(
-            self.config[-1]["out_channels"], self.config[-1]["out_channels"]
-        )
-        self.fc_log_var = nn.Linear(
-            self.config[-1]["out_channels"], self.config[-1]["out_channels"]
-        )
+        self.fc_mean = nn.Linear(self.latent_dim, self.latent_dim)
+        self.fc_log_var = nn.Linear(self.latent_dim, self.latent_dim)
 
     def reparameterize(self, mu: Tensor, log_var: Tensor) -> Tensor:
         """Reparameterization trick."""
@@ -130,3 +145,19 @@ class VarAutoEncoder(AutoEncoder):
             axis=0
         )
         return latent_space
+
+
+def encode_data(model, dataloader):
+    """Encode the data using the trained VAE or AE."""
+    encoded_data = []
+    model.eval()
+    with torch.no_grad():
+        for i, batch in enumerate(dataloader):
+            batch = batch.float()
+            encoded_batch = model.encoder(batch)
+            encoded_data.append(encoded_batch)
+    # Concatenate encoded and decoded data
+    encoded_data = torch.cat(encoded_data, dim=0)
+    # Save encoded and decoded data
+    torch.save(encoded_data, "encoded_data.pth")
+    print("Encoded data saved")
