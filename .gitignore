@@ -1,9 +1,8 @@
 __pycache__/
 .venv/
-checkpoints/
+center_plots/
 lightning_logs/
 run.sh
 job_output.txt
 cache.pt
 tensor_cache.pt
-encoded_data.pth

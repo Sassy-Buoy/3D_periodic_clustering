@@ -2,51 +2,6 @@ import torch
 from torch import Tensor, nn
 
 
-class ConvBlock(nn.Module):
-    """Convolutional block with multiple convolutional layers."""
-
-    def __init__(
-        self,
-        kernels: list[int],
-        in_channels: int,
-        out_channels: int,
-        in_size: int,
-        out_size: int,
-    ):
-        super(ConvBlock, self).__init__()
-
-        self.layers = nn.Sequential()
-        for kernel_size in kernels:
-            self.layers.append(
-                nn.Conv3d(
-                    in_channels=(
-                        in_channels if len(self.layers) == 0 else out_channels
-                    ),
-                    out_channels=out_channels,
-                    kernel_size=kernel_size,
-                    padding=kernel_size // 2,
-                )
-            )
-            self.layers.append(nn.BatchNorm3d(out_channels))
-            self.layers.append(nn.GELU() if out_channels != 3 else nn.Identity())
-
-        if in_size > out_size:
-            self.downsample = nn.AdaptiveMaxPool3d(output_size=out_size)
-        elif in_size < out_size:
-            self.upsample = nn.Upsample(
-                size=(out_size, out_size, out_size), mode="trilinear"
-            )
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Forward pass through the convolutional block."""
-        if hasattr(self, "upsample"):
-            x = self.upsample(x)
-        x = self.layers(x)
-        if hasattr(self, "downsample"):
-            x = self.downsample(x)
-        return x
-
-
 class ResBlock(ConvBlock):
     """Residual block with convolutional layers and a skip connection."""
 

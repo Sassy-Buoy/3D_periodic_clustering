@@ -1,0 +1,37 @@
+model_type: "vanilla"
+config:
+  - type: Conv
+    in_channels: 3
+    out_channels: 32
+    kernel_size: 7
+    stride: 2
+    # dim : 48 -> 24
+
+  - type: Conv
+    in_channels: 32
+    out_channels: 64
+    kernel_size: 3
+    stride: 2
+    # dim : 24 -> 12
+
+  - type: Conv
+    in_channels: 64
+    out_channels: 128
+    kernel_size: 3
+    stride: 2
+    # dim : 12 -> 6
+
+  - type: Flatten
+    in_channels: 128
+    in_size: 6
+    out_features: 27648 # 128*6*6*6
+
+  - type: Linear
+    in_features: 27648 # 128*6*6*6
+    out_features: 256
+    activation: "ReLU"
+
+  - type: Linear
+    in_features: 256
+    out_features: 12
+    activation: null
