@@ -31,13 +31,15 @@ class MCSims(Dataset):
         If True, load the dataset into memory during initialization.
     preprocess : bool, optional
         If True, apply preprocessing to tensors before caching.
+    transform : bool, optional
+        If True, apply a random rotation to the tensors along the z-axis.
 
     Example
     -------
     >>> dataset = MCSims()
     """
 
-    def __init__(self, preload=True, preprocess=True, transform=False):
+    def __init__(self, preload=True, preprocess=True, augment=True):
         self.base_path = pl.Path(
             "/scratch/holtsamu/fege_phase_diagram/temperature_field_diagram/data/"
         )
@@ -45,7 +47,7 @@ class MCSims(Dataset):
         self.tensor_cache = pl.Path("tensor_cache.pt")
         self.preload = preload
         self.preprocess = preprocess
-        self.transform = transform
+        self.augment = augment
 
         self.x_dim = 97
         self.y_dim = 97
@@ -118,6 +120,11 @@ class MCSims(Dataset):
         Fetch simulation data as tensors.
         If preload=True, load from memory instead of reading files.
         """
+        k = index % 4  # which rotation to apply
+        index = (
+            index // 4 if self.augment else index
+        )  # if augment, get the original sample index
+
         if self.preload and self.preloaded_data is not None:
             tensor = self.preloaded_data[index]
         else:
@@ -129,9 +136,7 @@ class MCSims(Dataset):
             else:
                 tensor = self._load_tensor(get_val)
 
-        if self.transform:
-            tensor = RotateTransform()(tensor)
-        return tensor
+        return torch.rot90(tensor, k, dims=(1, 2)) if self.augment else tensor
 
     def __len__(self) -> int:
         """
@@ -143,7 +148,10 @@ class MCSims(Dataset):
         >>> len(dataset)
         2601
         """
-        return len(self.data_frame)
+        if self.augment:
+            return len(self.data_frame) * 4
+        else:
+            return len(self.data_frame)
 
     def save_tensor_cache(self):
         """Preload all tensors and save them to disk for faster access."""

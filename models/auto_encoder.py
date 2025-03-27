@@ -101,6 +101,8 @@ class AutoEncoder(nn.Module):
         layers = [nn.Linear(in_features, out_features)]
         if activation == "ReLU":
             layers.append(nn.ReLU())
+        elif activation == "LeakyReLU":
+            layers.append(nn.LeakyReLU())
         return layers
 
     def forward(self, x: Tensor):
@@ -119,12 +121,15 @@ class AutoEncoder(nn.Module):
 class VarAutoEncoder(AutoEncoder):
     """Autoencoder class that inherits from PyTorch's nn.Module class."""
 
-    def __init__(self, layers: list[dict], beta: float = 0.01):
+    def __init__(self, layers: list[dict]):
         super(VarAutoEncoder, self).__init__(layers)
         self.latent_dim = layers[-1]["out_features"]
         self.fc_mean = nn.Linear(self.latent_dim, self.latent_dim)
         self.fc_log_var = nn.Linear(self.latent_dim, self.latent_dim)
-        self.beta = beta
+        nn.init.xavier_uniform_(self.fc_mean.weight)
+        nn.init.xavier_uniform_(self.fc_log_var.weight)
+        nn.init.constant_(self.fc_mean.bias, 0)
+        nn.init.constant_(self.fc_log_var.bias, -5)
 
     def reparameterize(self, mu: Tensor, log_var: Tensor) -> Tensor:
         """Reparameterization trick."""
@@ -153,7 +158,7 @@ class VarAutoEncoder(AutoEncoder):
     def get_kl_divergence(self, mu: Tensor, log_var: Tensor) -> Tensor:
         """Calculate the KL divergence."""
         kl_divergence = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-        return self.beta * kl_divergence / mu.size(0)
+        return kl_divergence / mu.size(0)
 
     def latent_space(self, x: Tensor) -> Tensor:
         """Get the latent space representation."""
@@ -163,6 +168,20 @@ class VarAutoEncoder(AutoEncoder):
             axis=0
         )
         return latent_space
+
+
+class GMVAE(VarAutoEncoder):
+    """Gaussian Mixture Variational Autoencoder class."""
+
+    def __init__(self, layers: list[dict]):
+        super(GMVAE, self).__init__(layers)
+
+        self.gmm_means = nn.Parameter(torch.randn(self.latent_dim, self.latent_dim))
+        self.gmm_log_vars = nn.Parameter(torch.zeros(self.latent_dim, self.latent_dim))
+        self.gmm_weights = nn.Parameter(torch.ones(self.latent_dim) / self.latent_dim)
+    
+    def encode(self, x: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        pass
 
 
 def encode_data(model, dataloader):

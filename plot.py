@@ -6,7 +6,6 @@ import holoviews as hv
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import mplcursors
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
@@ -65,11 +64,10 @@ def plot_H_vs_T_with_hover(labels: list = []):
     ax_scatter, ax_image = axes
 
     scatter = ax_scatter.scatter(
-        df["H (A/m)"],
         df["T (K)"],
+        df["H (A/m)"],
         c=df["color"],
         marker="o",
-        label=f"Cluster {df['cluster']} : {df['cluster'].value_counts()}",
     )
 
     ax_scatter.set_xlabel("H (A/m)")
@@ -97,7 +95,7 @@ def plot_H_vs_T_with_hover(labels: list = []):
     plt.show()
 
 
-def training_log(y_range=[0.0, 1.0], version: list = []):
+def training_log(version: list = [], y_range: tuple | None = None):
     """
     Plots training and validation loss from a Lightning log directory.
 
@@ -207,7 +205,8 @@ def training_log(y_range=[0.0, 1.0], version: list = []):
         title="Training and Validation Loss",
         xaxis_title="Epoch",
         yaxis_title="Loss",
-        yaxis=dict(range=y_range),
+        yaxis_range=y_range,
+        
         updatemenus=[
             {
                 "buttons": [
@@ -239,34 +238,67 @@ def save_center_slices(dataset: MCSims, save_folder: str = "center_plots/"):
     """
     os.makedirs(save_folder, exist_ok=True)
 
+    hv.extension("matplotlib")
+
     for index in range(len(dataset)):
         tensor = dataset[index]  # Get tensor
-        center_slice = tensor[:, :, :, tensor.shape[3] // 2]  # Extract center Z-slice
-
-        # Reshape for matplotlib
-        value = center_slice.numpy().transpose((1, 2, 0))  # Ensure correct shape
-
-        # Create figure without axes or borders
-        fig, ax = plt.subplots()
-        ax.imshow(value[..., 0], cmap="Blues", vmin=-1, vmax=1)
-
-        # Quiver plot: create meshgrid for arrow placement
-        X, Y = np.meshgrid(np.arange(value.shape[1]), np.arange(value.shape[0]))
-        ax.quiver(X, Y, value[..., 1], value[..., 2])
-
-        # Remove axes, ticks, and white space
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_frame_on(False)
-        ax.axis("off")
 
         # Save figure without padding or white space
         file_path = os.path.join(save_folder, f"{index}.png")
-        plt.savefig(file_path, bbox_inches="tight", pad_inches=0, transparent=True)
-        plt.close(fig)
+        plot_center_slice(tensor, save_path=file_path)
         print(f"Saved: {file_path}")
 
 
+def plot_center_slice(tensor, save_path: str | None = None):
+    """
+    Convert a ``torch.Tensor`` to ``discretisedfield.Field`` and plot the center z-slice.
+    - Uses z-component as a scalar field (color map).
+    - Uses (x, y) components as a vector field (arrows).
+    """
+    x_dim, y_dim, z_dim, v_dim = (
+        tensor.shape[1],
+        tensor.shape[2],
+        tensor.shape[3],
+        tensor.shape[0],
+    )
+
+    center_z = z_dim // 2  # Find the center z-index
+    value = tensor.to("cpu").numpy().transpose((1, 2, 3, 0))[:, :, center_z, :]
+
+    p1, p2 = (0, 0), (x_dim - 1, y_dim - 1)
+    mesh = df.Mesh(p1=p1, p2=p2, n=(x_dim, y_dim))
+
+    # Extract x, y components for vector field & z component for scalar field
+    vector_field = value[..., :2]  # First two components (x, y)
+    scalar_field = value[..., 2]  # Third component (z)
+
+    # Create fields
+    vector_df = df.Field(mesh=mesh, value=vector_field, nvdim=2)
+    scalar_df = df.Field(mesh=mesh, value=scalar_field, nvdim=1)
+
+    # Plot both fields together
+    vector_plot = vector_df.hv(kdims=["x", "y"], vector_kw={"scale": 1})
+    scalar_plot = scalar_df.hv(
+        kdims=["x", "y"], scalar_kw={"clim": (-1, 1), "colorbar": False}
+    )
+
+    plot = scalar_plot * vector_plot  # Overlay plots
+    plot.opts(
+        hv.opts.Image(xaxis=None, yaxis=None, axiswise=True),
+        hv.opts.VectorField(xaxis=None, yaxis=None, axiswise=True),
+    )
+
+    fig = hv.render(plot)
+
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+    # Save as PNG without requiring a browser
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches="tight", pad_inches=0)
+
+    return plot
+
+
 if __name__ == "__main__":
-    dataset = MCSims()
+    dataset = MCSims(preload=False, preprocess=False, augment=False)
     save_center_slices(dataset)

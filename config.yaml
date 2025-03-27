@@ -1,4 +1,7 @@
-model_type: "vanilla"
+model_type: "variational"
+beta: 0.001
+learning_rate: 0.001
+batch_size: 512
 config:
   - type: Conv
     in_channels: 3
@@ -10,28 +13,37 @@ config:
   - type: Conv
     in_channels: 32
     out_channels: 64
-    kernel_size: 3
+    kernel_size: 5
     stride: 2
     # dim : 24 -> 12
 
   - type: Conv
     in_channels: 64
     out_channels: 128
-    kernel_size: 3
+    kernel_size: 5
     stride: 2
     # dim : 12 -> 6
+  
+  - type: Conv
+    in_channels: 128
+    out_channels: 256
+    kernel_size: 3
+    stride: 2
+    # dim : 6 -> 3
+  
+  - type: Conv
+    in_channels: 256
+    out_channels: 512
+    kernel_size: 3
+    stride: 3
+    # dim : 3 -> 1
 
   - type: Flatten
-    in_channels: 128
-    in_size: 6
-    out_features: 27648 # 128*6*6*6
+    in_channels: 512
+    in_size: 1
+    out_features: 512
 
   - type: Linear
-    in_features: 27648 # 128*6*6*6
-    out_features: 256
-    activation: "ReLU"
-
-  - type: Linear
-    in_features: 256
-    out_features: 12
-    activation: null
+    in_features: 512
+    out_features: 10
+    activation: None
