@@ -10,7 +10,8 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from dataset import MCSims
-
+from sklearn.manifold import TSNE
+import umap
 
 def plot_field_xy_from_tensor(tensor, save_path: str | None = None):
     """
@@ -70,8 +71,8 @@ def plot_H_vs_T_with_hover(labels: list = []):
         marker="o",
     )
 
-    ax_scatter.set_xlabel("H (A/m)")
-    ax_scatter.set_ylabel("T (K)")
+    ax_scatter.set_xlabel("T (K)")
+    ax_scatter.set_ylabel("H (A/m)")
     ax_scatter.set_title("H vs T Phase Diagram")
 
     # Configure image display panel
@@ -93,6 +94,69 @@ def plot_H_vs_T_with_hover(labels: list = []):
         fig.canvas.draw_idle()
 
     plt.show()
+
+
+def plot_clusters_with_hover(encoded_data, labels: list = []):
+    """
+    Use TSNE to reduce the dimensionality of the dataset and plot the clusters with hover functionality.
+    """
+    # reducer = TSNE(n_components=2, random_state=42)
+
+    reducer = umap.UMAP(n_components=2)
+
+    reduced_data = reducer.fit_transform(encoded_data)
+
+    # Create a list of unique clusters
+    unique_clusters = set(labels)
+
+    # Assign a color for each cluster (using a colormap, e.g., 'jet')
+    colors = [plt.cm.jet(i / len(unique_clusters)) for i in range(len(unique_clusters))]
+
+    # Map the cluster labels to the corresponding colors
+    color_map = {cluster: colors[i] for i, cluster in enumerate(unique_clusters)}
+    point_colors = [color_map[label] for label in labels]
+
+    # Preload images into a dictionary
+    image_cache = {}
+    df = pd.DataFrame({'index': range(len(encoded_data))})  # Ensuring df is properly defined
+    
+    for index in df['index']:  # Using column name explicitly
+        img_path = f"center_plots/{index}.png"
+        if os.path.exists(img_path):
+            image_cache[index] = mpimg.imread(img_path)
+
+    # Create figure with two subplots: scatter plot (left) & image display (right)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    ax_scatter, ax_image = axes
+
+    scatter = ax_scatter.scatter(
+        reduced_data[:, 0],
+        reduced_data[:, 1],
+        c=point_colors,
+        marker="o"
+    )
+
+    # Configure image display panel
+    ax_image.axis("off")  # Hide axes
+    img_display = ax_image.imshow([[0]])  # Placeholder image
+
+    cursor = mplcursors.cursor(scatter, hover=True)
+
+    @cursor.connect("add")
+    def on_hover(sel):
+        """Updates the right-side image when hovering over a point."""
+        index = sel.index  # Fixing the missing index reference
+        if index in image_cache:
+            img_display.set_data(image_cache[index])
+            ax_image.set_visible(True)
+        else:
+            ax_image.set_visible(False)
+
+        fig.canvas.draw_idle()
+
+    plt.show()
+
+
 
 
 def training_log(version: list = [], y_range: tuple | None = None):

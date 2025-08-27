@@ -1,8 +1,8 @@
 """run.py"""
 
 import lightning as L
-import torch
 import yaml
+import torch
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from lightning.pytorch.loggers import CSVLogger
@@ -25,7 +25,7 @@ checkpoint_callback = ModelCheckpoint(
 trainer = L.Trainer(
     precision="16-mixed",
     callbacks=[checkpoint_callback, EarlyStopping(monitor="val_loss", patience=50)],
-    min_epochs=1000,
+    min_epochs=2000,
     logger=logger,
     accumulate_grad_batches=2,
     log_every_n_steps=1,
@@ -38,15 +38,14 @@ with open("config.yaml", "r") as f:
 model = LitModel(
     model_type=config["model_type"],
     config=config["config"],
-    beta=config["beta"],
     learning_rate=config["learning_rate"],
     plot=False,
 )
 
-weights = LitModel.load_from_checkpoint("lightning_logs/version_1/model-510-0.012.ckpt", hparams_file="lightning_logs/version_1/hparams.yaml").state_dict()
-model.model.load_state_dict(weights, strict=False)
+model.model.load_state_dict(
+    torch.load("lightning_logs/version_11/model.pth"))
 
 trainer.fit(
     model,
-    datamodule=MCSimsDataModule(batch_size=int(config["batch_size"] / 2), num_workers=4),
+    datamodule=MCSimsDataModule(batch_size=int(config["batch_size"] / 2), num_workers=2),
 )

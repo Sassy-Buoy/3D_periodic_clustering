@@ -1,5 +1,6 @@
 __pycache__/
 .venv/
+.zed/
 center_plots/
 lightning_logs/
 run.sh

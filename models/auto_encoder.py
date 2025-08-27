@@ -161,12 +161,12 @@ class VarAutoEncoder(AutoEncoder):
         return kl_divergence / mu.size(0)
 
     def latent_space(self, x: Tensor) -> Tensor:
-        """Get the latent space representation."""
+        """Get the latent space representation as a normalized Tensor."""
         mean, _ = self.encode(x)
-        latent_space = mean.detach().cpu().numpy()
-        latent_space = (latent_space - latent_space.mean(axis=0)) / latent_space.std(
-            axis=0
-        )
+        latent_space = mean.detach()
+        # mean_val = latent_space.mean(dim=0, keepdim=True)
+        # std_val = latent_space.std(dim=0, keepdim=True)
+        # latent_space = (latent_space - mean_val) / std_val
         return latent_space
 
 
@@ -179,21 +179,8 @@ class GMVAE(VarAutoEncoder):
         self.gmm_means = nn.Parameter(torch.randn(self.latent_dim, self.latent_dim))
         self.gmm_log_vars = nn.Parameter(torch.zeros(self.latent_dim, self.latent_dim))
         self.gmm_weights = nn.Parameter(torch.ones(self.latent_dim) / self.latent_dim)
-    
+
     def encode(self, x: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         pass
 
 
-def encode_data(model, dataloader):
-    """Encode the data using the trained VAE or AE."""
-    encoded_data = []
-    model.eval()
-    with torch.no_grad():
-        for i, batch in enumerate(dataloader):
-            batch = batch.float()
-            encoded_batch = model.encoder(batch.to("cuda"))
-            encoded_data.append(encoded_batch)
-    # Concatenate encoded and decoded data
-    encoded_data = torch.cat(encoded_data, dim=0)
-    # Save encoded and decoded data
-    return encoded_data
