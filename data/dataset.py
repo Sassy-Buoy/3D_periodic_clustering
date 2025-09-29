@@ -43,8 +43,8 @@ class MCSims(Dataset):
         self.base_path = pl.Path(
             "/scratch/holtsamu/fege_phase_diagram/temperature_field_diagram/data/"
         )
-        self.cache_file = pl.Path("cache.pt")
-        self.tensor_cache = pl.Path("tensor_cache.pt")
+        self.cache_file = pl.Path("data/cache.pt")
+        self.tensor_cache = pl.Path("data/tensor_cache.pt")
         self.preload = preload
         self.preprocess = preprocess
         self.augment = augment
@@ -82,16 +82,19 @@ class MCSims(Dataset):
         1       7957.747150  2280.0  /scratch/holtsamu/fege_phase_diagram/temperatu...
         2      15915.494301  2280.0  /scratch/holtsamu/fege_phase_diagram/temperatu...
         """
-        DF = pd.DataFrame(columns=["H (A/m)", "T (K)", "File"])
-        for path in self.base_path.glob("data_*"):
-            dat_arr = np.loadtxt(path / "log.dat")
-            vti_files = list(path.glob("*.vti"))
-            vti_files.sort()
-            for i, file in enumerate(vti_files):
-                DF.loc[len(DF)] = [dat_arr[i, 0], dat_arr[0, 1], file]
+        if self.cache_file.exists():
+            return pd.read_csv(self.cache_file)
+        else:
+            DF = pd.DataFrame(columns=["H (A/m)", "T (K)", "File"])
+            for path in self.base_path.glob("data_*"):
+                dat_arr = np.loadtxt(path / "log.dat")
+                vti_files = list(path.glob("*.vti"))
+                vti_files.sort()
+                for i, file in enumerate(vti_files):
+                    DF.loc[len(DF)] = [dat_arr[i, 0], dat_arr[0, 1], file]
 
-        DF.to_csv(self.cache_file, index=False)
-        return DF
+            DF.to_csv(self.cache_file, index=False)
+            return DF
 
     def _load_tensor(self, file_path: str) -> torch.Tensor:
         """Helper function to load a single tensor from a .vti file."""

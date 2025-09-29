@@ -2,7 +2,6 @@
 
 import lightning as L
 import yaml
-import torch
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from lightning.pytorch.loggers import CSVLogger
@@ -39,11 +38,8 @@ model = LitModel(
     model_type=config["model_type"],
     config=config["config"],
     learning_rate=config["learning_rate"],
-    plot=False,
+    threshold=config["threshold"] if config["model_type"] == "variational" else None,
 )
-
-model.model.load_state_dict(
-    torch.load("lightning_logs/version_11/model.pth"))
 
 trainer.fit(
     model,
