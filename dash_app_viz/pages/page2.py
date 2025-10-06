@@ -8,9 +8,9 @@ import torch
 from dash import Input, Output, dcc, html
 
 # ---- Load data ----
-example_sims = torch.load("dash_app_viz/example_sims.pt")  # Original simulations
-ae_recon = torch.load("dash_app_viz/vanilla_reconstruction.pt")  # Autoencoder
-vae_recon = torch.load("dash_app_viz/variational_reconstruction.pt")  # VAE
+example_sims = torch.load("example_sims.pt")  # Original simulations
+ae_recon = torch.load("vanilla_reconstruction.pt")  # Autoencoder
+vae_recon = torch.load("variational_reconstruction.pt")  # VAE
 
 
 # ---- Helper: tensor → 2D mpl plot for a slice at z_value ----

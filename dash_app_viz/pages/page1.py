@@ -9,7 +9,7 @@ from dash import Input, Output, callback, dcc, html
 
 # ---- Load data ----
 # load dataset from csv
-df = pd.read_csv("dash_app_viz/dataset.csv")
+df = pd.read_csv("dataset.csv")
 
 # ---- Build Plotly figure ----
 # Assign colors to clusters
