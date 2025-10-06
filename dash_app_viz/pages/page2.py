@@ -4,23 +4,19 @@ import io
 import dash
 import discretisedfield as df
 import matplotlib.pyplot as plt
-import torch
+import numpy as np
 from dash import Input, Output, dcc, html
 
 # ---- Load data ----
-example_sims = torch.load("example_sims.pt")  # Original simulations
-ae_recon = torch.load("vanilla_reconstruction.pt")  # Autoencoder
-vae_recon = torch.load("variational_reconstruction.pt")  # VAE
+example_sims = np.load("example_sims.npy")  # Original simulations
+ae_recon = np.load("vanilla_reconstruction.npy")  # Autoencoder
+vae_recon = np.load("variational_reconstruction.npy")  # VAE
 
 
 # ---- Helper: tensor → 2D mpl plot for a slice at z_value ----
-def plot_field_xy_from_tensor(tensor, z_value):
+def plot_field_xy_from_tensor(array, z_value):
     """Return a Matplotlib plot of a 2D slice as a base64 PNG for Dash."""
-    if tensor.requires_grad:
-        tensor = tensor.detach()
-
-    v_dim, x_dim, y_dim, z_dim = tensor.shape
-    value = tensor.cpu().numpy().transpose((1, 2, 3, 0))
+    x_dim, y_dim, z_dim, v_dim = array.shape
 
     mesh = df.Mesh(
         p1=(0, 0, 0),
@@ -28,7 +24,7 @@ def plot_field_xy_from_tensor(tensor, z_value):
         n=(x_dim, y_dim, z_dim),
     )
 
-    field = df.Field(mesh=mesh, value=value, nvdim=v_dim)
+    field = df.Field(mesh=mesh, value=array, nvdim=v_dim)
 
     # Create a figure and axes manually
     fig, ax = plt.subplots(figsize=(5, 5))
