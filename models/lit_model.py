@@ -1,6 +1,7 @@
 """Lightning module for training and evaluation."""
 
 import os
+
 import lightning as L
 import torch
 from sklearn.model_selection import train_test_split
@@ -206,22 +207,22 @@ class LitModel(L.LightningModule):
         os.makedirs(f"{self.logger.log_dir}/latent_space_per_epoch", exist_ok=True)
         latent_space = self.encode_data(
             self.model,
-            DataLoader(self.trainer.datamodule.data, batch_size=64, shuffle=False),
+            self.trainer.datamodule.test_dataloader(),
         )
         torch.save(
             latent_space,
             f"{self.logger.log_dir}/latent_space_per_epoch/{self.current_epoch}.pth",
         )
 
-        os.makedirs(f"{self.logger.log_dir}/reconstructions", exist_ok=True)
-        with torch.no_grad():
-            recon = self.model(
-                self.trainer.datamodule.data[1].unsqueeze(0).float().to("cuda")
-            )
-        torch.save(
-            recon,
-            f"{self.logger.log_dir}/reconstructions/{self.current_epoch}.pth",
-        )
+        #os.makedirs(f"{self.logger.log_dir}/reconstructions", exist_ok=True)
+        #with torch.no_grad():
+        #    recon = self.model(
+        #        self.trainer.datamodule.data[1].unsqueeze(0).float().to("cuda")
+        #    )
+        #torch.save(
+        #    recon,
+        #    f"{self.logger.log_dir}/reconstructions/{self.current_epoch}.pth",
+        #)
 
     def on_fit_end(self):
         """Saves the trained model at the end of training."""

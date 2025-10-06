@@ -4,10 +4,11 @@ import discretisedfield as df
 import holoviews as hv
 import matplotlib.pyplot as plt
 
-from data.dataset import MCSims
-#from sklearn.manifold import TSNE
-#import umap
+# from sklearn.manifold import TSNE
+# import umap
 import plotly.graph_objects as go
+
+from data.dataset import MCSims
 
 
 def plot_field_xy_from_tensor(tensor, save_path: str | None = None):

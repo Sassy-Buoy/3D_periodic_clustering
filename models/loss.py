@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchmetrics.functional import structural_similarity_index_measure as ssim
 
+
 class CustomLoss(nn.Module):
     def __init__(self, alpha=0.5):
         """
@@ -46,7 +47,9 @@ class CustomLoss(nn.Module):
         """
         pred_norm = F.normalize(pred, dim=1, eps=eps)
         target_norm = F.normalize(target, dim=1, eps=eps)
-        cos_sim = torch.sum(pred_norm * target_norm, dim=1)  # Cosine similarity per voxel
+        cos_sim = torch.sum(
+            pred_norm * target_norm, dim=1
+        )  # Cosine similarity per voxel
         loss = (1 - cos_sim).mean()  # Average over all voxels and batch
         return loss
 

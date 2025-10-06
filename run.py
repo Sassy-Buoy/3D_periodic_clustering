@@ -43,5 +43,7 @@ model = LitModel(
 
 trainer.fit(
     model,
-    datamodule=MCSimsDataModule(batch_size=int(config["batch_size"] / 2), num_workers=2),
+    datamodule=MCSimsDataModule(
+        batch_size=int(config["batch_size"] / 2), num_workers=2
+    ),
 )
