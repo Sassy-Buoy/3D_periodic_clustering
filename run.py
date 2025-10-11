@@ -1,6 +1,7 @@
 """run.py"""
 
 import lightning as L
+import torch
 import yaml
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
@@ -40,6 +41,9 @@ model = LitModel(
     learning_rate=config["learning_rate"],
     threshold=config["threshold"] if config["model_type"] == "variational" else None,
 )
+
+# Load pre-trained weights
+# model.model.load_state_dict(torch.load("lightning_logs/version_24/model.pth"))
 
 trainer.fit(
     model,
