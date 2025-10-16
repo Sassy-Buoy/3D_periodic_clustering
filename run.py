@@ -23,7 +23,6 @@ checkpoint_callback = ModelCheckpoint(
 )
 
 trainer = L.Trainer(
-    precision="16-mixed",
     callbacks=[checkpoint_callback, EarlyStopping(monitor="val_loss", patience=50)],
     min_epochs=2000,
     logger=logger,
@@ -43,7 +42,7 @@ model = LitModel(
 )
 
 # Load pre-trained weights
-# model.model.load_state_dict(torch.load("lightning_logs/version_24/model.pth"))
+model.model.load_state_dict(torch.load("lightning_logs/version_ae6/model.pth"), strict=False)
 
 trainer.fit(
     model,

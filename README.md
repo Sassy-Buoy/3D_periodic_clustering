@@ -1,5 +1,7 @@
 # ML-based Clustering and Dimensionality Reduction for 3D Magnetic Field Simulations
 
+[![Render](https://img.shields.io/badge/Live%20App-Render-blue?style=for-the-badge&logo=render)](https://threed-periodic-clustering.onrender.com)
+
 This repository contains code for clustering and dimensionality reduction of 3D magnetic field simulation data using machine learning techniques. The main components include:
 - **Data Handling**: Functions to load and preprocess 3D magnetic field data.
 - **Model Definitions**: Implementation of Variational Autoencoders (VAE) and Autoencoders (AE) for dimensionality reduction.

@@ -137,7 +137,7 @@ class LitModel(L.LightningModule):
             beta = 0
         else:
             beta = min(1.0, (current_epoch - init_phase) / 100)
-        return beta
+        return 1
 
     def training_step(self, batch, batch_idx):
         """Performs a training step, computes the loss, and logs metrics."""
@@ -196,6 +196,7 @@ class LitModel(L.LightningModule):
                 batch = batch.float().to(device)
                 if self.model_type == "variational":
                     encoded_batch = model.latent_space(batch)
+                    encoded_data.append(encoded_batch.cpu())
                 else:
                     encoded_batch = model.encoder(batch)
                     encoded_data.append(encoded_batch.cpu())

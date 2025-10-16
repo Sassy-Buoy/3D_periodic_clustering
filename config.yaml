@@ -1,5 +1,5 @@
-model_type: "vanilla"
-#threshold: 16
+model_type: "variational"  # "vanilla" or "variational"
+threshold: 18
 learning_rate: 0.001
 batch_size: 512
 config:
