@@ -137,7 +137,7 @@ class LitModel(L.LightningModule):
             beta = 0
         else:
             beta = min(1.0, (current_epoch - init_phase) / 100)
-        return 1
+        return 1.0
 
     def training_step(self, batch, batch_idx):
         """Performs a training step, computes the loss, and logs metrics."""

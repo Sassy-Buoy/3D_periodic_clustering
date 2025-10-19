@@ -1,27 +1,34 @@
-import numpy as np
 import optuna
-import pandas as pd
-import torch
-from sklearn.metrics.cluster import contingency_matrix
-from sklearn.mixture import BayesianGaussianMixture
+from sklearn.mixture import BayesianGaussianMixture, GaussianMixture
+import os
+from cluster_acc import purity, adj_rand_index
 
 # Load dataset
-encoded_data = torch.load("lightning_logs/version_11/encoded_data.pth").cpu().numpy()
-true_df = pd.read_csv("dataset.csv")
-true_labels = true_df["label"].values
+from models.lit_model import LitModel, MCSimsDataModule
 
+version = "7"
+path = f"lightning_logs/version_{version}/"
 
-# Define purity score
-def purity_score(y_true, y_pred):
-    y_pred = [y_pred[10 * i] for i in range(261)]
-    matrix = contingency_matrix(y_true, y_pred)
-    return np.sum(np.amax(matrix, axis=0)) / np.sum(matrix)
+# get the latest checkpoint from the path folder
+checkpoint = max(
+    [f for f in os.listdir(path) if f.endswith(".ckpt")],
+    key=lambda x: int(x.split("-")[1]),
+)
+print(f"Loading checkpoint: {checkpoint}")
 
+litmodel = LitModel.load_from_checkpoint(
+    os.path.join(path, checkpoint),
+)
+
+model = litmodel.model
+model.eval()
+
+dataset = MCSimsDataModule(batch_size=256, num_workers=4)
+encoded_data = litmodel.encode_data(model, dataset.test_dataloader())
 
 # Objective function for Optuna
 def objective(trial):
     # Hyperparameters
-    n_components = trial.suggest_int("n_components", 2, 10)
     weight_concentration_prior_type = trial.suggest_categorical(
         "weight_concentration_prior_type",
         ["dirichlet_process", "dirichlet_distribution"],
@@ -35,18 +42,18 @@ def objective(trial):
 
     labels = (
         BayesianGaussianMixture(
-            n_components=n_components,
+            n_components=5,
             weight_concentration_prior_type=weight_concentration_prior_type,
             weight_concentration_prior=weight_concentration_prior,
             covariance_type=covariance_type,
             max_iter=1000,
-            random_state=42,
         )
         .fit(encoded_data)
         .predict(encoded_data)
     )
+    predicted_labels = [labels[10 * i] for i in range(261)]
 
-    return purity_score(true_labels, labels)
+    return adj_rand_index(predicted_labels)
 
 
 # Run the optimization

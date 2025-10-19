@@ -1,5 +1,5 @@
 model_type: "variational"  # "vanilla" or "variational"
-threshold: 18
+threshold: 16
 learning_rate: 0.001
 batch_size: 512
 config:
@@ -50,5 +50,5 @@ config:
   
   - type: Linear
     in_features: 64
-    out_features: 6
+    out_features: 8
     activation: None

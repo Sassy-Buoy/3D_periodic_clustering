@@ -304,47 +304,47 @@ layout = html.Div(
                                         "marginBottom": "20px",
                                     },
                                 ),
-                                html.Div(
-                                    [
-                                        html.H3(
-                                            "🧩 Latent Space Visualization",
-                                            style={
-                                                "color": "#16a085",
-                                                "marginBottom": "15px",
-                                            },
-                                        ),
-                                        html.P(
-                                            "Visualize the latent space using UMAP to understand how the models encode the data throughout the training process. Compare the latent spaces of Variational Autoencoders and standard Autoencoders.",
-                                            style={
-                                                "fontSize": "14px",
-                                                "lineHeight": "1.6",
-                                                "marginBottom": "15px",
-                                            },
-                                        ),
-                                        dcc.Link(
-                                            html.Button(
-                                                "View Latent Space",
-                                                style={
-                                                    "backgroundColor": "#16a085",
-                                                    "color": "white",
-                                                    "border": "none",
-                                                    "padding": "10px 20px",
-                                                    "borderRadius": "5px",
-                                                    "cursor": "pointer",
-                                                    "fontSize": "14px",
-                                                },
-                                            ),
-                                            href="/latent-space",
-                                        ),
-                                    ],
-                                    style={
-                                        "backgroundColor": "#fff",
-                                        "padding": "25px",
-                                        "borderRadius": "8px",
-                                        "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
-                                        "width": "100%",
-                                    },
-                                ),
+                                # html.Div(
+                                #    [
+                                #        html.H3(
+                                #            "🧩 Latent Space Visualization",
+                                #            style={
+                                #               "color": "#16a085",
+                                #               "marginBottom": "15px",
+                                #            },
+                                #        ),
+                                #        html.P(
+                                #            "Visualize the latent space using UMAP to understand how the models encode the data throughout the training process. Compare the latent spaces of Variational Autoencoders and standard Autoencoders.",
+                                #            style={
+                                #                "fontSize": "14px",
+                                #                "lineHeight": "1.6",
+                                #                "marginBottom": "15px",
+                                #            },
+                                #        ),
+                                #        dcc.Link(
+                                #            html.Button(
+                                #               "View Latent Space",
+                                #               style={
+                                #                   "backgroundColor": "#16a085",
+                                #                   "color": "white",
+                                #                   "border": "none",
+                                #                   "padding": "10px 20px",
+                                #                   "borderRadius": "5px",
+                                #                   "cursor": "pointer",
+                                #                   "fontSize": "14px",
+                                #               },
+                                #           ),
+                                #            href="/latent-space",
+                                #        ),
+                                #    ],
+                                #    style={
+                                #        "backgroundColor": "#fff",
+                                #        "padding": "25px",
+                                #        "borderRadius": "8px",
+                                #        "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
+                                #        "width": "100%",
+                                #    },
+                                #),
                             ],
                             style={"marginBottom": "30px"},
                         ),
