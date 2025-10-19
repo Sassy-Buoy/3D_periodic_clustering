@@ -1,0 +1,6 @@
+plotly
+pandas
+gunicorn
+discretisedfield
+numpy
+matplotlib
