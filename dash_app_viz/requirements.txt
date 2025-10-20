@@ -4,3 +4,4 @@ gunicorn
 discretisedfield
 numpy
 matplotlib
+dash
